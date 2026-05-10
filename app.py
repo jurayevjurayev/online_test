@@ -4,7 +4,6 @@ from reportlab.pdfgen import canvas
 import io
 from flask import send_file
 import json
-from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import time
 from reportlab.lib.pagesizes import landscape, A4
@@ -1252,101 +1251,65 @@ def certificate_pdf():
         total = 1
 
     percent = int((score / total) * 100)
-
-    img = Image.open("certificate_template.png")
-    draw = ImageDraw.Draw(img)
-
-    try:
-        font_name = ImageFont.truetype("arialbd.ttf", 55)
-        font_result = ImageFont.truetype("arial.ttf", 36)
-    except:
-        font_name = ImageFont.load_default()
-        font_result = ImageFont.load_default()
-
-    # =========================
-    # FOYDALANUVCHI ISMI
-    # =========================
-
     name = session['user']
-
-    bbox = draw.textbbox((0, 0), name, font=font_name)
-    text_width = bbox[2] - bbox[0]
-
-    x_name = (img.width - text_width) / 2
-    y_name = 470
-
-    draw.text(
-        (x_name, y_name),
-        name,
-        fill="#0A4F3C",
-        font=font_name
-    )
-
-    # =========================
-    # NATIJA
-    # =========================
-
     result = f"{score} / {total} ({percent}%)"
 
-    bbox2 = draw.textbbox((0, 0), result, font=font_result)
-    result_width = bbox2[2] - bbox2[0]
-
-    x_result = (img.width - result_width) / 2
-    y_result = 635
-
-    draw.text(
-        (x_result, y_result),
-        result,
-        fill="#0A4F3C",
-        font=font_result
-    )
-
-    # =========================
-    # QR CODE
-    # =========================
-
-    qr = qrcode.make(
-        f"https://online-test-hxts.onrender.com/verify/{name}"
-    )
-
-    qr = qr.resize((170, 170))
-
-    img_width, img_height = img.size
-
-    img.paste(
-        qr,
-        (img_width - 290, img_height - 260)
-    )
-
-    # =========================
-    # PNG BUFFER
-    # =========================
-
-    img_buffer = io.BytesIO()
-    img.save(img_buffer, format="PNG")
-    img_buffer.seek(0)
-
-    # =========================
-    # PDF BUFFER
-    # =========================
-
     pdf_buffer = io.BytesIO()
+    pdf = canvas.Canvas(pdf_buffer, pagesize=landscape(A4))
 
-    pdf = canvas.Canvas(
-        pdf_buffer,
-        pagesize=landscape(A4)
-    )
+    width, height = landscape(A4)
+
+    # Page background and border
+    pdf.setFillColorRGB(0.96, 0.98, 0.94)
+    pdf.rect(0, 0, width, height, fill=1, stroke=0)
+    pdf.setLineWidth(5)
+    pdf.setStrokeColorRGB(0.06, 0.27, 0.36)
+    pdf.rect(25, 25, width - 50, height - 50, fill=0, stroke=1)
+
+    # Header and title
+    pdf.setFillColorRGB(0.06, 0.27, 0.36)
+    pdf.setFont("Helvetica-Bold", 48)
+    pdf.drawCentredString(width / 2, height - 110, "SERTIFIKAT")
+
+    pdf.setFont("Helvetica", 20)
+    pdf.drawCentredString(width / 2, height - 150, "Ikkiyunlik imtihon natijasi asosida beriladi")
+
+    # Recipient name
+    pdf.setFont("Helvetica-Bold", 42)
+    pdf.setFillColorRGB(0.08, 0.32, 0.22)
+    pdf.drawCentredString(width / 2, height - 250, name.upper())
+
+    # Result text
+    pdf.setFont("Helvetica-Bold", 30)
+    pdf.drawCentredString(width / 2, height - 310, result)
+
+    pdf.setFont("Helvetica", 18)
+    pdf.setFillColorRGB(0, 0, 0)
+    pdf.drawCentredString(width / 2, height - 360, "Sizning natijangiz imtihon yakuni bo‘yicha hisoblandi.")
+
+    # Verification text
+    verify_url = f"https://online-test-hxts.onrender.com/verify/{name}"
+    pdf.setFont("Helvetica", 14)
+    pdf.drawString(55, 55, "Tekshirish uchun: ")
+    pdf.setFillColorRGB(0.06, 0.27, 0.36)
+    pdf.drawString(185, 55, verify_url)
+
+    # QR code image
+    qr = qrcode.make(verify_url)
+    qr = qr.resize((170, 170))
+    qr_buffer = io.BytesIO()
+    qr.save(qr_buffer, format="PNG")
+    qr_buffer.seek(0)
 
     pdf.drawImage(
-        ImageReader(img_buffer),
-        0,
-        0,
-        width=842,
-        height=595
+        ImageReader(qr_buffer),
+        width - 235,
+        55,
+        width=170,
+        height=170
     )
 
     pdf.save()
-
     pdf_buffer.seek(0)
 
     return send_file(
