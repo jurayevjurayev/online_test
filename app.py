@@ -1241,15 +1241,25 @@ def certificate_pdf():
     data = c.fetchone()
     conn.close()
 
-    score, total = data
-    percent = int((score / total) * 100) if total else 0
+    if not data:
+        return "Sertifikat topilmadi"
 
-    # 🖼 rasmni yaratish
+    score, total = data
+
+    if not total:
+        total = 1
+
+    percent = int((score / total) * 100)
+
     img = Image.open("certificate_template.png")
     draw = ImageDraw.Draw(img)
 
-    font1 = ImageFont.truetype("arial.ttf", 60)
-    font2 = ImageFont.truetype("arialbd.ttf", 35)
+    try:
+        font1 = ImageFont.truetype("arial.ttf", 60)
+        font2 = ImageFont.truetype("arialbd.ttf", 35)
+    except:
+        font1 = ImageFont.load_default()
+        font2 = ImageFont.load_default()
 
     name = session['user']
     draw.text((800, 450), name, fill="black", font=font1)
@@ -1257,15 +1267,12 @@ def certificate_pdf():
     result = f"{score} / {total} ({percent}%)"
     draw.text((790, 665), result, fill="red", font=font2)
 
-    # QR
-    import qrcode
-    qr = qrcode.make(f"http://127.0.0.1:5000/verify/{name}")
+    qr = qrcode.make(f"https://online-test-hxts.onrender.com/verify/{name}")
     qr = qr.resize((250, 250))
 
     img_width, img_height = img.size
     img.paste(qr, (img_width - 350, img_height - 350))
 
-    # 📄 PDF yaratish
     buffer = io.BytesIO()
     img.convert("RGB").save(buffer, format="PDF")
     buffer.seek(0)
