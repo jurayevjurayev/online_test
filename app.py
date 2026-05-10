@@ -7,6 +7,7 @@ import json
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import time
+from reportlab.lib.pagesizes import landscape, A4
 from reportlab.lib.utils import ImageReader
 
 app = Flask(__name__)
@@ -1283,15 +1284,15 @@ def certificate_pdf():
     pdf_buffer = io.BytesIO()
 
     # PDF yaratish
-    pdf = canvas.Canvas(pdf_buffer, pagesize=(2000, 1414))
+    pdf = canvas.Canvas(pdf_buffer, pagesize=landscape(A4))
 
     # PNG ni PDF ichiga joylash
     pdf.drawImage(
      ImageReader(img_buffer),
-      0,
-      0,
-      width=2000,
-      height=1414
+     0,
+     0,
+     width=842,
+     height=595
     )
 
     pdf.save()
