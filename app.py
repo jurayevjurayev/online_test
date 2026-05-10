@@ -16,11 +16,21 @@ except ImportError:
     PdfReader = None
     PdfWriter = None
 
+from PIL import Image, ImageDraw, ImageFont
+
 app = Flask(__name__)
 app.secret_key = "secret123"
 
 with open("savollar.json", "r", encoding="utf-8") as f:
     QUESTIONS = json.load(f)
+
+TESTS = {}
+for name, filename in [("test1", "savollar_test1.json"), ("test2", "savollar_test2.json")]:
+    if os.path.exists(filename):
+        with open(filename, "r", encoding="utf-8") as f:
+            TESTS[name] = json.load(f)
+    else:
+        TESTS[name] = QUESTIONS
 
 # DATABASE
 def init_db():
@@ -39,10 +49,22 @@ def init_db():
     )
     """)
 
-    try:
-        c.execute("ALTER TABLE users ADD COLUMN has_taken_test INTEGER DEFAULT 0")
-    except:
-        pass
+    for column_sql in [
+        "ALTER TABLE users ADD COLUMN has_taken_test INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test1_score INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test1_total INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test1_taken INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test1_time INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test2_score INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test2_total INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test2_taken INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test2_time INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN last_test TEXT DEFAULT ''"
+    ]:
+        try:
+            c.execute(column_sql)
+        except sqlite3.OperationalError:
+            pass
 
     conn.commit()
     conn.close()
@@ -393,17 +415,16 @@ def profile():
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
 
-    c.execute("SELECT score, total FROM users WHERE username=?", (session['user'],))
+    c.execute("SELECT score, total, last_test FROM users WHERE username=?", (session['user'],))
     data = c.fetchone()
 
     score = data[0] if data else 0
     total = data[1] if data else 0
+    last_test = data[2] if data and data[2] else "—"
 
     percent = int((score / total) * 100) if total > 0 else 0
 
     conn.close()
-
-    score = data[0] if data else 0
 
     return render_template_string("""
 
@@ -523,8 +544,13 @@ Foydalanuvchi
 </div>
 
 <div class="box">
+<b>So'nggi test</b><br>
+{{last_test}}
+</div>
+
+<div class="box">
 <b>Testlar</b><br>
-1 ta
+2 ta
 </div>
 
 </div>
@@ -547,21 +573,101 @@ Foydalanuvchi
 """, user=session['user'],
     score=score,
     total=total,
-    percent=percent)
+    percent=percent,
+    last_test=last_test)
 
 @app.route('/ranking')
 def ranking():
+    return render_template_string("""
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial;
+    background:linear-gradient(135deg,#141e30,#243b55);
+    min-height:100vh;
+    padding:20px;
+}
+
+.container{
+    max-width:950px;
+    margin:auto;
+}
+
+.title{
+    text-align:center;
+    color:white;
+    margin-bottom:25px;
+    font-size:35px;
+}
+
+.card{
+    background:white;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    padding:40px;
+    text-align:center;
+}
+
+.btn{
+    display:inline-block;
+    margin:15px 10px;
+    padding:14px 24px;
+    background:#243b55;
+    color:white;
+    text-decoration:none;
+    border-radius:10px;
+    font-weight:bold;
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1 class="title">🏆 REYTING TANLASH</h1>
+
+<div class="card">
+    <p>Qaysi test bo‘yicha reytingni ko‘rmoqchisiz?</p>
+    <a href="/ranking/test1" class="btn">Test 1 Reyting</a>
+    <a href="/ranking/test2" class="btn">Test 2 Reyting</a>
+    <div style="margin-top:20px;">
+        <a href="/profile" class="btn">🏠 Profilga qaytish</a>
+    </div>
+</div>
+
+</div>
+
+</body>
+</html>
+""")
+
+@app.route('/ranking/<test_name>')
+def ranking_test(test_name):
+    if test_name not in TESTS:
+        return redirect('/ranking')
+
+    test_label = "Test 1" if test_name == "test1" else "Test 2"
+    score_col = f"{test_name}_score"
+    total_col = f"{test_name}_total"
+    time_col = f"{test_name}_time"
 
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
 
-    c.execute("""
-        SELECT username, score, total, spent_time
-        FROM users
-        WHERE total > 0
-        ORDER BY score DESC, spent_time ASC
-    """)
-
+    c.execute(f"SELECT username, {score_col}, {total_col}, {time_col} FROM users WHERE {total_col} > 0 ORDER BY {score_col} DESC, {time_col} ASC")
     users = c.fetchall()
     conn.close()
 
@@ -622,7 +728,7 @@ body{
     align-items:center;
     transition:0.3s;
 }
-                                  
+                                 
 .row:hover{
     background:#f5f7fa;
 }
@@ -631,7 +737,7 @@ body{
     font-size:22px;
     font-weight:bold;
 }
-                                  
+                                 
 .user{
     font-weight:bold;
     color:#243b55;
@@ -646,7 +752,7 @@ body{
     color:#dc3545;
     font-weight:bold;
 }
-                                  
+                                 
 .top1{
     background:#fff3cd;
 }
@@ -658,10 +764,10 @@ body{
 .top3{
     background:#f8d7da;
 }
-                                  
+                                 
 .btn{
     display:inline-block;
-    margin-top:20px;
+    margin:20px 10px;
     padding:14px 24px;
     background:white;
     color:#243b55;
@@ -669,7 +775,7 @@ body{
     border-radius:10px;
     font-weight:bold;
 }
-                                  
+                                 
 @media(max-width:700px){
 
 .table-head,
@@ -683,14 +789,14 @@ body{
 }
 
 }
-                                  
+                                 
 </style>
 </head>
 <body>
 
 <div class="container">
 
-<h1 class="title">🏆 TOP REYTING</h1>
+<h1 class="title">🏆 {{test_label}} REYTING</h1>
 
 <div class="card">
 
@@ -740,6 +846,9 @@ body{
 </div>
                                   
 <center>
+<a href="/ranking" class="btn">
+◀️ Testni tanlash
+</a>
 <a href="/profile" class="btn">
 🏠 Profilga qaytish
 </a>
@@ -749,7 +858,7 @@ body{
 
 </body>
 </html>
-""", users=users)
+""", users=users, test_label=test_label)
 
 
 @app.route('/test-info')
@@ -826,14 +935,17 @@ ul{
 
 <h1>DIQQAT❗️</h1>
 
+<div style="display:flex;justify-content:center;gap:15px;flex-wrap:wrap;margin-bottom:20px;">
+    <a href="/test-start/test1" class="btn">Test 1</a>
+    <a href="/test-start/test2" class="btn">Test 2</a>
+</div>
+
 <ul>
     <li>Har bir savol uchun 30 sekunt vaqt ajratilgan bo'lib jami 30 ta savol mavjud</li>
     <li>Test oxirida natija foizda chiqadi</li>
     <li>Testni faqat 1 marta ishlash imkoniyati mavjud</li>
     <li>Savollarga javob berilgandan so'ng navbatdagi savolga o'tiladi</li>
 </ul>
-
-<a href="/test-start" class="btn">Testni boshlash</a>
 
 </div>
 
@@ -842,14 +954,19 @@ ul{
 """)
 
 @app.route('/test-start')
-def test_start():
+@app.route('/test-start/<test_name>')
+def test_start(test_name=None):
 
     if 'user' not in session:
         return redirect('/login')
 
+    if test_name not in TESTS:
+        return redirect('/test-info')
+
     session['q_index'] = 0
     session['score_temp'] = 0
     session['start_time'] = time.time()
+    session['test_name'] = test_name
 
     return redirect('/test')
 
@@ -860,11 +977,19 @@ def test():
     if 'user' not in session:
         return redirect('/login')
 
+    if 'test_name' not in session:
+        return redirect('/test-info')
+
+    test_name = session['test_name']
+    questions = TESTS.get(test_name, QUESTIONS)
+    test_label = "Test 1" if test_name == "test1" else "Test 2"
+    taken_col = f"{test_name}_taken"
+
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
 
     c.execute(
-        "SELECT has_taken_test FROM users WHERE username=?",
+        f"SELECT {taken_col} FROM users WHERE username=?",
         (session['user'],)
     )
 
@@ -935,7 +1060,7 @@ body{
 </div>
 
 <div class="text">
-Siz allaqachon test topshirgansiz
+Siz allaqachon {{test_label}} topshirgansiz
 </div>
 
 <a href="/profile" class="btn">
@@ -946,7 +1071,7 @@ Profilga qaytish
 
 </body>
 </html>
-""")
+""", test_label=test_label)
 
     if 'q_index' not in session:
         session['q_index'] = 0
@@ -955,10 +1080,10 @@ Profilga qaytish
     index = session['q_index']
 
     # TEST TUGASHI (eng to‘g‘ri joyga ko‘chirildi)
-    if index >= len(QUESTIONS):
+    if index >= len(questions):
 
         final_score = session['score_temp']
-        total = len(QUESTIONS)
+        total = len(questions)
 
         percent = int((final_score / total) * 100) if total > 0 else 0
         spent_time = int(time.time() - session['start_time'])
@@ -966,11 +1091,11 @@ Profilga qaytish
         conn = sqlite3.connect("users.db")
         c = conn.cursor()
 
-        c.execute("""
+        c.execute(f"""
          UPDATE users
-         SET score=?, total=?, has_taken_test=1, spent_time=?
+         SET {test_name}_score=?, {test_name}_total=?, {test_name}_taken=1, {test_name}_time=?, score=?, total=?, has_taken_test=1, spent_time=?, last_test=?
          WHERE username=?
-        """, (final_score, total, spent_time, session['user']))
+        """, (final_score, total, spent_time, final_score, total, spent_time, test_label, session['user']))
 
         conn.commit()
         conn.close()
@@ -978,6 +1103,7 @@ Profilga qaytish
         session.pop('q_index', None)
         session.pop('score_temp', None)
         session.pop('start_time', None)
+        session.pop('test_name', None)
 
         return render_template_string("""
 <!DOCTYPE html>
@@ -1076,7 +1202,7 @@ body{
      # agar user javob bergan bo‘lsa
      if answer is not None:
         answer = int(answer)
-        correct = QUESTIONS[index]['correct']
+        correct = questions[index]['correct']
 
         if answer == correct:
             session['score_temp'] += 1
@@ -1086,8 +1212,8 @@ body{
      return redirect('/test')
 
     # SAVOL KO‘RSATISH (RESPONSIVE UI)
-    q = QUESTIONS[index]
-    total = len(QUESTIONS)
+    q = questions[index]
+    total = len(questions)
 
     return render_template_string("""
 <!DOCTYPE html>
@@ -1219,19 +1345,21 @@ def verify(username):
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
 
-    c.execute("SELECT score, total FROM users WHERE username=?", (username,))
+    c.execute("SELECT score, total, last_test FROM users WHERE username=?", (username,))
     data = c.fetchone()
     conn.close()
 
     if not data:
         return "❌ Sertifikat topilmadi"
 
-    score, total = data
-    percent = int((score / total) * 100)
+    score, total, last_test = data
+    percent = int((score / total) * 100) if total > 0 else 0
+    last_test = last_test or "Test"
 
     return f"""
     <h2>✔ Sertifikat tasdiqlandi</h2>
     <p>Foydalanuvchi: {username}</p>
+    <p>Test turi: {last_test}</p>
     <p>Natija: {percent}%</p>
     """
 
@@ -1242,17 +1370,30 @@ def certificate_pdf():
     if 'user' not in session:
         return redirect('/login')
 
+    # Positions (qo'lda sozlash uchun)
+    name_y = 640  # Nom uchun y pozitsiyasi
+    name_x_offset = -300  # Nom uchun x offset (markazdan)
+    result_y = 850  # Natija uchun y pozitsiyasi
+    result_x_offset = -600  # Natija uchun x offset (markazdan)
+    qr_x_offset = 400  # QR kodning o'ngdan masofasi
+    qr_y_offset = 330  # QR kodning pastdan masofasi
+    font_size_name = 50  # Nom uchun shrift o'lchami
+    font_size_result = 20  # Natija uchun shrift o'lchami
+    qr_size = 170  # QR kod o'lchami
+
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
 
-    c.execute("SELECT score, total FROM users WHERE username=?", (session['user'],))
+    c.execute("SELECT score, total, last_test FROM users WHERE username=?", (session['user'],))
     data = c.fetchone()
     conn.close()
 
     if not data:
         return "Sertifikat topilmadi"
 
-    score, total = data
+    score, total, last_test = data
+    if not last_test:
+        last_test = "Test"
 
     if not total:
         total = 1
@@ -1282,8 +1423,11 @@ def certificate_pdf():
     overlay.setFillColorRGB(0, 0, 0)
     overlay.drawCentredString(width / 2, height - 380, result)
 
+    overlay.setFont("Helvetica", 18)
+    overlay.drawCentredString(width / 2, height - 430, f"Test turi: {last_test}")
+
     overlay.setFont("Helvetica", 14)
-    overlay.drawCentredString(width / 2, height - 420, "Siz ushbu sertifikatni onlayn test natijalari asosida oldingiz.")
+    overlay.drawCentredString(width / 2, height - 460, "Siz ushbu sertifikatni onlayn test natijalari asosida oldingiz.")
 
     overlay.setFont("Helvetica", 12)
     overlay.setFillColorRGB(0.06, 0.27, 0.36)
@@ -1308,32 +1452,76 @@ def certificate_pdf():
     overlay.save()
     overlay_buffer.seek(0)
 
-    template_path = "certificate_template.pdf"
-    use_template = os.path.exists(template_path) and PdfReader is not None and PdfWriter is not None
+    template_path = "certificate_template.png"
 
-    if use_template:
-        template_pdf = PdfReader(template_path)
-        overlay_pdf = PdfReader(overlay_buffer)
-        page = template_pdf.pages[0]
+    if os.path.exists(template_path):
+        img = Image.open(template_path)
 
-        if hasattr(page, "merge_page"):
-            page.merge_page(overlay_pdf.pages[0])
+        draw = ImageDraw.Draw(img)
+
+        # Font yuklash
+        font_path = r"C:\Windows\Fonts\arial.ttf"
+        if os.path.exists(font_path):
+            font_name = ImageFont.truetype(font_path, font_size_name)
+            font_result = ImageFont.truetype(font_path, font_size_result)
+            font_test = ImageFont.truetype(font_path, 22)
         else:
-            page.mergePage(overlay_pdf.pages[0])
+            font_name = ImageFont.load_default()
+            font_result = ImageFont.load_default()
+            font_test = ImageFont.load_default()
 
-        writer = PdfWriter()
-        writer.add_page(page)
+        # Name
+        name_text = name.upper()
+        bbox = draw.textbbox((0, 0), name_text, font=font_name)
+        text_width = bbox[2] - bbox[0]
+        x_name = (img.width - text_width) // 2 + name_x_offset
+        draw.text((x_name, name_y), name_text, fill=(0, 0, 0), font=font_name)
 
-        final_buffer = io.BytesIO()
-        writer.write(final_buffer)
-        final_buffer.seek(0)
+        # Result
+        bbox = draw.textbbox((0, 0), result, font=font_result)
+        text_width = bbox[2] - bbox[0]
+        x_result = (img.width - text_width) // 2 + result_x_offset
+        draw.text((x_result, result_y), result, fill=(0, 0, 0), font=font_result)
 
-        return send_file(
-            final_buffer,
-            as_attachment=True,
-            download_name="sertifikat.pdf",
-            mimetype="application/pdf"
-        )
+        # Test label
+        test_text = f"Test turi: {last_test}"
+        bbox = draw.textbbox((0, 0), test_text, font=font_test)
+        text_width = bbox[2] - bbox[0]
+        x_test = (img.width - text_width) // 2 + result_x_offset
+        draw.text((x_test, result_y + 50), test_text, fill=(0, 0, 0), font=font_test)
+
+        # QR
+        qr = qrcode.make(verify_url)
+        qr = qr.resize((qr_size, qr_size))
+        img.paste(qr, (img.width - qr_x_offset, img.height - qr_y_offset))
+
+        # Save img
+
+        img_buffer = io.BytesIO()
+
+        img.save(img_buffer, format="PNG")
+
+        img_buffer.seek(0)
+
+        # PDF
+
+        pdf_buffer = io.BytesIO()
+
+        c = canvas.Canvas(pdf_buffer, pagesize=landscape(A4))
+
+        page_width, page_height = landscape(A4)
+
+        img_width, img_height = img.size
+
+        scale = min(page_width / img_width, page_height / img_height)
+
+        c.drawImage(ImageReader(img_buffer), 0, 0, width=img_width * scale, height=img_height * scale)
+
+        c.save()
+
+        pdf_buffer.seek(0)
+
+        return send_file(pdf_buffer, as_attachment=True, download_name="sertifikat.pdf", mimetype="application/pdf")
 
     return send_file(
         overlay_buffer,
