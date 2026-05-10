@@ -1,0 +1,17 @@
+[
+  {
+    "q": "Python nima?",
+    "a": ["Dasturlash tili", "Oyin", "Brauzer", "OS"],
+    "correct": 0
+  },
+  {
+    "q": "HTML nima?",
+    "a": ["Style", "Structure", "Database", "AI"],
+    "correct": 1
+  },
+  {
+    "q": "Flask nima?",
+    "a": ["Web framework", "Game", "Editor", "OS"],
+    "correct": 0
+  }
+]
