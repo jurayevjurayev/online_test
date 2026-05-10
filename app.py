@@ -8,9 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import time
 from reportlab.lib.pagesizes import landscape, A4
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfbase import pdfmetrics
-import io
+from reportlab.lib.utils import ImageReader
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -1231,6 +1229,7 @@ def verify(username):
     <p>Natija: {percent}%</p>
     """
 
+
 @app.route('/certificate-pdf')
 def certificate_pdf():
 
@@ -1240,11 +1239,7 @@ def certificate_pdf():
     conn = sqlite3.connect("users.db")
     c = conn.cursor()
 
-    c.execute(
-        "SELECT score, total FROM users WHERE username=?",
-        (session['user'],)
-    )
-
+    c.execute("SELECT score, total FROM users WHERE username=?", (session['user'],))
     data = c.fetchone()
     conn.close()
 
@@ -1253,52 +1248,109 @@ def certificate_pdf():
 
     score, total = data
 
+    if not total:
+        total = 1
+
     percent = int((score / total) * 100)
 
+    img = Image.open("certificate_template.png")
+    draw = ImageDraw.Draw(img)
+
+    try:
+        font_name = ImageFont.truetype("arialbd.ttf", 55)
+        font_result = ImageFont.truetype("arial.ttf", 36)
+    except:
+        font_name = ImageFont.load_default()
+        font_result = ImageFont.load_default()
+
+    # =========================
+    # FOYDALANUVCHI ISMI
+    # =========================
+
     name = session['user']
+
+    bbox = draw.textbbox((0, 0), name, font=font_name)
+    text_width = bbox[2] - bbox[0]
+
+    x_name = (img.width - text_width) / 2
+    y_name = 470
+
+    draw.text(
+        (x_name, y_name),
+        name,
+        fill="#0A4F3C",
+        font=font_name
+    )
+
+    # =========================
+    # NATIJA
+    # =========================
+
     result = f"{score} / {total} ({percent}%)"
 
-    buffer = io.BytesIO()
+    bbox2 = draw.textbbox((0, 0), result, font=font_result)
+    result_width = bbox2[2] - bbox2[0]
+
+    x_result = (img.width - result_width) / 2
+    y_result = 635
+
+    draw.text(
+        (x_result, y_result),
+        result,
+        fill="#0A4F3C",
+        font=font_result
+    )
+
+    # =========================
+    # QR CODE
+    # =========================
+
+    qr = qrcode.make(
+        f"https://online-test-hxts.onrender.com/verify/{name}"
+    )
+
+    qr = qr.resize((170, 170))
+
+    img_width, img_height = img.size
+
+    img.paste(
+        qr,
+        (img_width - 290, img_height - 260)
+    )
+
+    # =========================
+    # PNG BUFFER
+    # =========================
+
+    img_buffer = io.BytesIO()
+    img.save(img_buffer, format="PNG")
+    img_buffer.seek(0)
+
+    # =========================
+    # PDF BUFFER
+    # =========================
+
+    pdf_buffer = io.BytesIO()
 
     pdf = canvas.Canvas(
-        buffer,
+        pdf_buffer,
         pagesize=landscape(A4)
     )
 
-    # Sertifikat foni
     pdf.drawImage(
-        "certificate_template.png",
+        ImageReader(img_buffer),
         0,
         0,
         width=842,
         height=595
     )
 
-    # FONT
-    pdf.setFont("Helvetica-Bold", 32)
-
-    # ISM
-    pdf.drawString(
-        250,
-        300,
-        name
-    )
-
-    # NATIJA
-    pdf.setFont("Helvetica", 22)
-
-    pdf.drawString(
-        260,
-        180,
-        result
-    )
-
     pdf.save()
 
-    buffer.seek(0)
+    pdf_buffer.seek(0)
 
     return send_file(
-        buffer,
+        pdf_buffer,
         as_attachment=True,
         download_name="sertifikat.pdf",
         mimetype="application/pdf"
