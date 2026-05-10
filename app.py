@@ -1257,42 +1257,92 @@ def certificate_pdf():
     draw = ImageDraw.Draw(img)
 
     try:
-        font1 = ImageFont.truetype("arial.ttf", 60)
-        font2 = ImageFont.truetype("arialbd.ttf", 35)
+        font_name = ImageFont.truetype("arialbd.ttf", 55)
+        font_result = ImageFont.truetype("arial.ttf", 36)
     except:
-        font1 = ImageFont.load_default()
-        font2 = ImageFont.load_default()
+        font_name = ImageFont.load_default()
+        font_result = ImageFont.load_default()
+
+    # =========================
+    # FOYDALANUVCHI ISMI
+    # =========================
 
     name = session['user']
-    draw.text((800, 450), name, fill="black", font=font1)
+
+    bbox = draw.textbbox((0, 0), name, font=font_name)
+    text_width = bbox[2] - bbox[0]
+
+    x_name = (img.width - text_width) / 2
+    y_name = 470
+
+    draw.text(
+        (x_name, y_name),
+        name,
+        fill="#0A4F3C",
+        font=font_name
+    )
+
+    # =========================
+    # NATIJA
+    # =========================
 
     result = f"{score} / {total} ({percent}%)"
-    draw.text((790, 665), result, fill="red", font=font2)
 
-    qr = qrcode.make(f"https://online-test-hxts.onrender.com/verify/{name}")
-    qr = qr.resize((250, 250))
+    bbox2 = draw.textbbox((0, 0), result, font=font_result)
+    result_width = bbox2[2] - bbox2[0]
+
+    x_result = (img.width - result_width) / 2
+    y_result = 635
+
+    draw.text(
+        (x_result, y_result),
+        result,
+        fill="#0A4F3C",
+        font=font_result
+    )
+
+    # =========================
+    # QR CODE
+    # =========================
+
+    qr = qrcode.make(
+        f"https://online-test-hxts.onrender.com/verify/{name}"
+    )
+
+    qr = qr.resize((170, 170))
 
     img_width, img_height = img.size
-    img.paste(qr, (img_width - 350, img_height - 350))
 
-    # PNG vaqtinchalik buffer
+    img.paste(
+        qr,
+        (img_width - 290, img_height - 260)
+    )
+
+    # =========================
+    # PNG BUFFER
+    # =========================
+
     img_buffer = io.BytesIO()
     img.save(img_buffer, format="PNG")
     img_buffer.seek(0)
 
-    # PDF buffer
+    # =========================
+    # PDF BUFFER
+    # =========================
+
     pdf_buffer = io.BytesIO()
 
-    # PDF yaratish
-    pdf = canvas.Canvas(pdf_buffer, pagesize=landscape(A4))
+    pdf = canvas.Canvas(
+        pdf_buffer,
+        pagesize=landscape(A4)
+    )
 
-    # PNG ni PDF ichiga joylash
     pdf.drawImage(
-     ImageReader(img_buffer),
-     0,
-     0,
-     width=842,
-     height=595
+        ImageReader(img_buffer),
+        0,
+        0,
+        width=842,
+        height=595
     )
 
     pdf.save()
@@ -1300,10 +1350,10 @@ def certificate_pdf():
     pdf_buffer.seek(0)
 
     return send_file(
-      pdf_buffer,
-      as_attachment=True,
-      download_name="sertifikat.pdf",
-      mimetype="application/pdf"
+        pdf_buffer,
+        as_attachment=True,
+        download_name="sertifikat.pdf",
+        mimetype="application/pdf"
     )
 # LOGOUT
 @app.route('/logout')
