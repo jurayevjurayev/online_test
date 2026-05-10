@@ -1257,7 +1257,7 @@ def certificate_pdf():
     draw = ImageDraw.Draw(img)
 
     try:
-        font1 = ImageFont.truetype("arial.ttf", 100)
+        font1 = ImageFont.truetype("arial.ttf", 1000)
         font2 = ImageFont.truetype("arialbd.ttf", 35)
     except:
         font1 = ImageFont.load_default()
