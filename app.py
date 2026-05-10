@@ -4,10 +4,17 @@ from reportlab.pdfgen import canvas
 import io
 from flask import send_file
 import json
+import os
 import qrcode
 import time
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.lib.utils import ImageReader
+
+try:
+    from PyPDF2 import PdfReader, PdfWriter
+except ImportError:
+    PdfReader = None
+    PdfWriter = None
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -1253,67 +1260,83 @@ def certificate_pdf():
     percent = int((score / total) * 100)
     name = session['user']
     result = f"{score} / {total} ({percent}%)"
-
-    pdf_buffer = io.BytesIO()
-    pdf = canvas.Canvas(pdf_buffer, pagesize=landscape(A4))
+    verify_url = f"https://online-test-hxts.onrender.com/verify/{name}"
 
     width, height = landscape(A4)
 
-    # Page background and border
-    pdf.setFillColorRGB(0.96, 0.98, 0.94)
-    pdf.rect(0, 0, width, height, fill=1, stroke=0)
-    pdf.setLineWidth(5)
-    pdf.setStrokeColorRGB(0.06, 0.27, 0.36)
-    pdf.rect(25, 25, width - 50, height - 50, fill=0, stroke=1)
+    overlay_buffer = io.BytesIO()
+    overlay = canvas.Canvas(overlay_buffer, pagesize=landscape(A4))
 
-    # Header and title
-    pdf.setFillColorRGB(0.06, 0.27, 0.36)
-    pdf.setFont("Helvetica-Bold", 48)
-    pdf.drawCentredString(width / 2, height - 110, "SERTIFIKAT")
+    overlay.setFillColorRGB(0.06, 0.27, 0.36)
+    overlay.setFont("Helvetica-Bold", 42)
+    overlay.drawCentredString(width / 2, height - 200, "SERTIFIKAT")
 
-    pdf.setFont("Helvetica", 20)
-    pdf.drawCentredString(width / 2, height - 150, "Ikkiyunlik imtihon natijasi asosida beriladi")
+    overlay.setFont("Helvetica", 18)
+    overlay.drawCentredString(width / 2, height - 240, "Sizning test natijalaringiz asosida beriladi")
 
-    # Recipient name
-    pdf.setFont("Helvetica-Bold", 42)
-    pdf.setFillColorRGB(0.08, 0.32, 0.22)
-    pdf.drawCentredString(width / 2, height - 250, name.upper())
+    overlay.setFont("Helvetica-Bold", 36)
+    overlay.setFillColorRGB(0.08, 0.32, 0.22)
+    overlay.drawCentredString(width / 2, height - 320, name.upper())
 
-    # Result text
-    pdf.setFont("Helvetica-Bold", 30)
-    pdf.drawCentredString(width / 2, height - 310, result)
+    overlay.setFont("Helvetica-Bold", 28)
+    overlay.setFillColorRGB(0, 0, 0)
+    overlay.drawCentredString(width / 2, height - 380, result)
 
-    pdf.setFont("Helvetica", 18)
-    pdf.setFillColorRGB(0, 0, 0)
-    pdf.drawCentredString(width / 2, height - 360, "Sizning natijangiz imtihon yakuni bo‘yicha hisoblandi.")
+    overlay.setFont("Helvetica", 14)
+    overlay.drawCentredString(width / 2, height - 420, "Siz ushbu sertifikatni onlayn test natijalari asosida oldingiz.")
 
-    # Verification text
-    verify_url = f"https://online-test-hxts.onrender.com/verify/{name}"
-    pdf.setFont("Helvetica", 14)
-    pdf.drawString(55, 55, "Tekshirish uchun: ")
-    pdf.setFillColorRGB(0.06, 0.27, 0.36)
-    pdf.drawString(185, 55, verify_url)
+    overlay.setFont("Helvetica", 12)
+    overlay.setFillColorRGB(0.06, 0.27, 0.36)
+    overlay.drawString(55, 55, "Tekshirish uchun: ")
+    overlay.drawString(190, 55, verify_url)
 
-    # QR code image
     qr = qrcode.make(verify_url)
     qr = qr.resize((170, 170))
     qr_buffer = io.BytesIO()
     qr.save(qr_buffer, format="PNG")
     qr_buffer.seek(0)
 
-    pdf.drawImage(
+    overlay.drawImage(
         ImageReader(qr_buffer),
         width - 235,
         55,
         width=170,
-        height=170
+        height=170,
+        mask='auto'
     )
 
-    pdf.save()
-    pdf_buffer.seek(0)
+    overlay.save()
+    overlay_buffer.seek(0)
+
+    template_path = "certificate_template.pdf"
+    use_template = os.path.exists(template_path) and PdfReader is not None and PdfWriter is not None
+
+    if use_template:
+        template_pdf = PdfReader(template_path)
+        overlay_pdf = PdfReader(overlay_buffer)
+        page = template_pdf.pages[0]
+
+        if hasattr(page, "merge_page"):
+            page.merge_page(overlay_pdf.pages[0])
+        else:
+            page.mergePage(overlay_pdf.pages[0])
+
+        writer = PdfWriter()
+        writer.add_page(page)
+
+        final_buffer = io.BytesIO()
+        writer.write(final_buffer)
+        final_buffer.seek(0)
+
+        return send_file(
+            final_buffer,
+            as_attachment=True,
+            download_name="sertifikat.pdf",
+            mimetype="application/pdf"
+        )
 
     return send_file(
-        pdf_buffer,
+        overlay_buffer,
         as_attachment=True,
         download_name="sertifikat.pdf",
         mimetype="application/pdf"
