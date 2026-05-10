@@ -1264,7 +1264,7 @@ def certificate_pdf():
         font2 = ImageFont.load_default()
 
     name = session['user']
-    draw.text((900, 450), name, fill="black", font=font1)
+    draw.text((1000, 500), name, fill="black", font=font1)
 
     result = f"{score} / {total} ({percent}%)"
     draw.text((790, 665), result, fill="red", font=font2)
