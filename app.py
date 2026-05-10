@@ -7,6 +7,7 @@ import json
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import time
+from reportlab.lib.utils import ImageReader
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -1273,15 +1274,35 @@ def certificate_pdf():
     img_width, img_height = img.size
     img.paste(qr, (img_width - 350, img_height - 350))
 
-    buffer = io.BytesIO()
-    img.convert("RGB").save(buffer, format="PDF")
-    buffer.seek(0)
+    # PNG vaqtinchalik buffer
+    img_buffer = io.BytesIO()
+    img.save(img_buffer, format="PNG")
+    img_buffer.seek(0)
+
+    # PDF buffer
+    pdf_buffer = io.BytesIO()
+
+    # PDF yaratish
+    pdf = canvas.Canvas(pdf_buffer, pagesize=(2000, 1414))
+
+    # PNG ni PDF ichiga joylash
+    pdf.drawImage(
+     ImageReader(img_buffer),
+      0,
+      0,
+      width=2000,
+      height=1414
+    )
+
+    pdf.save()
+
+    pdf_buffer.seek(0)
 
     return send_file(
-        buffer,
-        as_attachment=True,
-        download_name="sertifikat.pdf",
-        mimetype="application/pdf"
+      pdf_buffer,
+      as_attachment=True,
+      download_name="sertifikat.pdf",
+      mimetype="application/pdf"
     )
 # LOGOUT
 @app.route('/logout')
