@@ -1257,14 +1257,14 @@ def certificate_pdf():
     draw = ImageDraw.Draw(img)
 
     try:
-        font1 = ImageFont.truetype("arial.ttf", 1000)
+        font1 = ImageFont.truetype("arial.ttf", 60)
         font2 = ImageFont.truetype("arialbd.ttf", 35)
     except:
         font1 = ImageFont.load_default()
         font2 = ImageFont.load_default()
 
     name = session['user']
-    draw.text((1000, 500), name, fill="black", font=font1)
+    draw.text((800, 450), name, fill="black", font=font1)
 
     result = f"{score} / {total} ({percent}%)"
     draw.text((790, 665), result, fill="red", font=font2)
@@ -1284,24 +1284,17 @@ def certificate_pdf():
     pdf_buffer = io.BytesIO()
 
     # PDF yaratish
-    pdf = canvas.Canvas(
-     pdf_buffer,
-     pagesize=landscape(A4)
-    )
+    pdf = canvas.Canvas(pdf_buffer, pagesize=landscape(A4))
 
     # PNG ni PDF ichiga joylash
     pdf.drawImage(
-      ImageReader(img_buffer),
-      0,
-      0,
-      width=842,
-      height=595
+     ImageReader(img_buffer),
+     0,
+     0,
+     width=842,
+     height=595
     )
 
-    # PAGE YAKUNLASH
-    pdf.showPage()
-
-    # PDF SAVE
     pdf.save()
 
     pdf_buffer.seek(0)
