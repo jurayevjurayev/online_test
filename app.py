@@ -1427,7 +1427,7 @@ def certificate_pdf():
     result_y = 780  # Natija uchun y pozitsiyasi
     result_x_offset = 0  # Natija uchun x offset (markazdan)
     result_y_offset = 0  # Natija uchun qo'shimcha vertikal siljitish
-    test_x_offset = 50  # Test label uchun x offset (markazdan)
+    test_x_offset = 0  # Test label uchun x offset (markazdan)
     test_y_offset = 340  # Test label uchun y offset (result_y ga nisbatan)
     qr_x_offset = 400  # QR kodning o'ngdan masofasi
     qr_y_offset = 330  # QR kodning pastdan masofasi
@@ -1549,7 +1549,7 @@ def certificate_pdf():
         draw.text((x_result, y_result_final), result, fill=(0, 0, 0), font=font_result)
 
         # Test label
-        test_text = f"Test topshirilgan kitob: {last_test}"
+        test_text = f"Kitob: {last_test}"
         bbox = draw.textbbox((0, 0), test_text, font=font_test)
         text_width = bbox[2] - bbox[0]
         x_test = (img.width - text_width) // 2 + test_x_offset
