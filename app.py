@@ -20,7 +20,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 app = Flask(__name__)
 app.secret_key = "secret123"
-DB_PATH = os.path.join(app.root_path, "users.db")
+DB_PATH = os.path.abspath(os.path.join(app.root_path, "users.db"))
 
 with open("savollar.json", "r", encoding="utf-8") as f:
     QUESTIONS = json.load(f)
@@ -39,6 +39,10 @@ for name, filename in [("test1", "savollar_test1.json"), ("test2", "savollar_tes
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
+    
+    # Enable WAL mode for better reliability
+    c.execute("PRAGMA journal_mode=WAL")
+    c.execute("PRAGMA synchronous=FULL")
 
     c.execute("""
     CREATE TABLE IF NOT EXISTS users(
@@ -73,6 +77,13 @@ def init_db():
     conn.close()
 
 init_db()
+
+# Helper function for database connections
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=FULL")
+    return conn
 
 # HOME
 @app.route('/')
@@ -200,7 +211,7 @@ def register():
         username = request.form['username']
         password = request.form['password']
 
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_db()
         c = conn.cursor()
 
         try:
@@ -305,7 +316,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_db()
         c = conn.cursor()
 
         c.execute(
@@ -415,7 +426,7 @@ def profile():
     if 'user' not in session:
         return redirect('/login')
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute("SELECT score, total, last_test FROM users WHERE username=?", (session['user'],))
@@ -667,7 +678,7 @@ def ranking_test(test_name):
     total_col = f"{test_name}_total"
     time_col = f"{test_name}_time"
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute(f"SELECT username, {score_col}, {total_col}, {time_col} FROM users WHERE {total_col} > 0 ORDER BY {score_col} DESC, {time_col} ASC")
@@ -989,7 +1000,7 @@ def test():
     test_label = f"{display_test_name} testini"
     taken_col = f"{test_name}_taken"
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute(
@@ -1092,7 +1103,7 @@ Profilga qaytish
         percent = int((final_score / total) * 100) if total > 0 else 0
         spent_time = int(time.time() - session['start_time'])
 
-        conn = sqlite3.connect(DB_PATH)
+        conn = get_db()
         c = conn.cursor()
 
         c.execute(f"""
@@ -1346,7 +1357,7 @@ let countdown = setInterval(function(){
 @app.route('/verify/<username>')
 def verify(username):
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute("SELECT score, total, last_test FROM users WHERE username=?", (username,))
@@ -1436,7 +1447,7 @@ def certificate_pdf():
     font_size_result = 24  # Natija uchun shrift o'lchami
     qr_size = 170  # QR kod o'lchami
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db()
     c = conn.cursor()
 
     c.execute("SELECT score, total, last_test FROM users WHERE username=?", (session['user'],))
