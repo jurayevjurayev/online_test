@@ -1,17 +1,127 @@
 [
   {
-    "q": "Python nima?",
-    "a": ["Dasturlash tili", "Oyin", "Brauzer", "OS"],
+    "q": "Abu Nasr Muhammad ibn Muhammad al-Farobiy qachon va qayerda tavallud topgan?",
+    "a": ["870-yil, Buxoro sh.", "873-yil, Forob sh.", "880-yil, Samarqand sh.", "To‘g‘ri javob yo‘q"],
     "correct": 0
   },
   {
-    "q": "HTML nima?",
-    "a": ["Style", "Structure", "Database", "AI"],
+    "q": "Abu Nasr Muhammad ibn Muhammad al-Farobiy nechadan ortiq tilni bilgan?",
+    "a": ["10 dan ortiq", "30 dan ortiq", "70 dan ortiq", "5 dan ortiq"],
+    "correct": 2
+  },
+  {
+    "q": "Abu Nasr Muhammad ibn Muhammad al-Farobiy “Fozil odamlar shahri” asarida birinchi mavjud deb nimani nazarda tutgan?",
+    "a": ["materiyani", "tabiat qonunlarini", "tangrini", "inson aqlini"],
+    "correct": 2
+  },
+  {
+    "q": "Fozil rahbar fazilatlari nechta deb ta’riflaydi Forobiy?",
+    "a": ["10", "12", "7", "15"],
     "correct": 1
   },
   {
-    "q": "Flask nima?",
-    "a": ["Web framework", "Game", "Editor", "OS"],
+    "q": "Aflotun insondagi xulq-atvor va xatti-harakatlarga sabab bo‘ladigan omilni nima deb tushuntiradi?",
+    "a": ["ijtimoiy muhit", "tarbiya va ta’lim", "inson tabiiy xislatlari", "iqtisodiy sharoit"],
+    "correct": 2
+  },
+  {
+    "q": "Arastu bilimni nechta turga bo‘lgan va ular qanday ataladi?",
+    "a": ["3 ta: amaliy va axloqiy", "2 ta: amaliy va nazariy", "2 ta: diniy va falsafiy", "3 ta: nazariy, amaliy va ijtimoiy"],
+    "correct": 1
+  },
+  {
+    "q": "Forobiy jamiyatlarni qanday turlarga ajratadi?",
+    "a": ["Faqat fozil jamiyat", "Fozil va johil jamiyat", "Adolatli va adolatsiz jamiyat", "Ilmiy va diniy jamiyat"],
+    "correct": 1
+  },
+  {
+    "q": "Fozil shahar aholisi qanday yashaydi?",
+    "a": ["har kim o‘z manfaatini ko‘zlab yashaydi", "o‘zaro yordamda, tartib-intizom bilan va umumiy maqsad sari yashaydi", "faqat boylik orttirish bilan yashaydi", "nizolar va tartibsizlikda yashaydi"],
+    "correct": 1
+  },
+  {
+    "q": "Forobiyga ko‘ra fozil odamlar shahar hokim fazilatlarining eng birinchisi qanday bo‘lishi kerak deydi?",
+    "a": ["faqat boy va qudratli bo‘lishi kerak", "jismonan sog‘lom bo‘lishi kerak", "faqat harbiy kuchga ega bo‘lishi kerak", "faqat qobiliyatli bo‘lishi kerak"],
+    "correct": 1
+  },
+  {
+    "q": "Adashgan shahar aholisining fikricha baxt-saodatga qachon yetishish mumkin?",
+    "a": ["faqat dunyoda yashab turganda", "faqat o‘lgandan keyin", "hech qachon", "faqat ilm orqali"],
+    "correct": 1
+  },
+  {
+    "q": "Quyidagi javoblarning qaysi biri hukmronning birinchi qiladigan ishlaridan emas?",
+    "a": ["qabilalarni o‘zaro bog‘lash", "nikoh orqali yaqinlashtirish", "urushni kuchaytirish", "ijtimoiy birlik yaratish"],
+    "correct": 2
+  },
+  {
+    "q": "“G‘oliblar doimo eng yaxshi odamlar, mag‘lublar esa eng yomonlar” degan tushunchadan ogohlantirgan mutafakkir kim?",
+    "a": ["Arastu", "Aflotun", "Forobiy", "Demokrit"],
+    "correct": 1
+  },
+  {
+    "q": "Forobiy “Fozil odamlar shahri” asarida nima haqida yozadi?",
+    "a": ["faqat iqtisodiy tizim haqida", "inson jamoasi haqida", "faqat diniy qoidalar haqida", "faqat siyosiy hokimiyat haqida"],
+    "correct": 1
+  },
+  {
+    "q": "Aflotun qonunlarni bilmagan va ularga bo‘ysunmaganlar ularni …… deb atashni xohlab qoladilar deya ta’kidlaydi?",
+    "a": ["adolatli", "mukammal", "bema’ni", "foydali"],
+    "correct": 2
+  },
+  {
+    "q": "Aflotunning fikricha, eng mushkul ish nima?",
+    "a": ["Qonun ustidan arz qilish", "Qonunni joriy qilish", "Qonunni o‘zgartirish", "Qonunga shubha bilan qarash"],
+    "correct": 1
+  },
+  {
+    "q": "Aflotunning fikricha, eng oson ish nima?",
+    "a": ["qonunni joriy qilish", "qonun ustidan arz qilish", "qonunga shubha bilan qarash", "b va c javob to‘g‘ri"],
+    "correct": 3
+  },
+  {
+    "q": "Forobiy unsurlarni nechtaga bo‘lgan?",
+    "a": ["7", "2", "3", "4"],
+    "correct": 3
+  },
+  {
+    "q": "Forobiy fikricha, to‘liq jamiyatlar necha turga bo‘linadi?",
+    "a": ["Ikki turga", "Uch turga", "To‘rt turga", "Besh turga"],
+    "correct": 1
+  },
+  {
+    "q": "Forobiyning to‘liq jamiyatlardan biri sifatida buyuk jamiyatga qanday ta’rif bergan?",
+    "a": ["biror xalqni tashkil qiladi", "yer yuzidagi barcha joylar va yashovchi odamlar jamoasi", "u yoki bu shahar aholisi birlashmasi", "to‘g‘ri javob keltirilmagan"],
+    "correct": 1
+  },
+  {
+    "q": "Forobiyning to‘liq jamiyatlardan biri sifatida o‘rta jamiyatga qanday ta’rif bergan?",
+    "a": ["biror xalqni tashkil qiladi", "yer yuzidagi barcha joylar va yashovchi odamlar jamoasi", "u yoki bu shahar aholisi birlashmasi", "to‘g‘ri javob keltirilmagan"],
     "correct": 0
+  },
+  {
+    "q": "Forobiyning to‘liq jamiyatlardan biri sifatida kichik jamiyatga qanday ta’rif bergan?",
+    "a": ["biror xalqni tashkil qiladi", "yer yuzidagi barcha joylar va yashovchi odamlar jamoasi", "u yoki bu shahar aholisi birlashmasi", "to‘g‘ri javob keltirilmagan"],
+    "correct": 2
+  },
+  {
+    "q": "Forobiy fikricha, to‘liqsiz jamiyatlarga nimalar kiradi?",
+    "a": ["Davlat, xalq va shahar", "Qishloq, mahalla va oila jamoalari", "Harbiy va siyosiy guruhlar", "Savdogarlar va hunarmandlar uyushmasi"],
+    "correct": 1
+  },
+  {
+    "q": "Forobiy eng kichik jamiyat deb nimani aytgan?",
+    "a": ["Mahalla", "Shahar", "Oila", "Qishloq"],
+    "correct": 2
+  },
+  {
+    "q": "Forobiy shahar va qishloq boshqaruvchisi rais insonning qaysi a’zosiga qiyoslangan?",
+    "a": ["Jigar", "Qo‘l", "Ko‘z", "Yurak"],
+    "correct": 3
+  },
+  {
+    "q": "Fozil odamlar shahriga barcha fazilat(12)larga ega barkamol shaxs shahardan ketib qolsa yoki vafot etganda uning o‘rniga keluvchida yana nechta fazilat hosil qilinishi zarur?",
+    "a": ["5", "4", "8", "6"],
+    "correct": 3
   }
 ]

@@ -1,17 +1,127 @@
 [
   {
-    "q": "2*2=?",
-    "a": ["4", "6", "8", "10"],
+    "q": "“Do‘stim Goratsio, dunyoda donishmandlarning ham tushiga kirmagan ko‘p narsa bor” degan mashhur fikr muallifi kim?",
+    "a": ["Aristotel", "Shekspir", "Suqrot", "Forobiy"],
+    "correct": 1
+  },
+  {
+    "q": "“Kashf qilish xuddi toqqa chiqishdek, ko‘z oldingda yangi va kengroq manzara paydo bo‘ladi” degan fikr muallifi kim?",
+    "a": ["Shekspir", "Emerson", "Enshteyn", "Karl Praybram"],
+    "correct": 2
+  },
+  {
+    "q": "Oldinga qadam tashlashdan avval …….. zarur?",
+    "a": ["yangi tanishlar orttirish", "fikrlarni yangilash", "ko‘proq ishlash", "tashqi muhitni o‘zgartirish"],
+    "correct": 1
+  },
+  {
+    "q": "“Boriga beriladi, yo‘g‘idan bori ham olib qo‘yiladi” degan fikr qayerdan olingan?",
+    "a": ["Tavrot", "Qur’on", "Evangeliya 19:26", "Hadislar to‘plami"],
+    "correct": 2
+  },
+  {
+    "q": "“Miyamda hech qanday fikr yo‘q, lekin ongim necha yuz mingta tushunchalarni dunyoga keltirishga qodir” degan fikr muallifi kim?",
+    "a": ["Shekspir", "Eynshteyn", "Ralf Uoldo Emerson", "Karl Praybram"],
+    "correct": 2
+  },
+  {
+    "q": "1976–1982 yillarda fristayl bo‘yicha Yevropa Kubogini qo‘lga kiritgan jamoa a’zosi Kris Polayn mashg‘ulotlardan tashqari ongdan samarali foydalanish maqsadida kim bilan hamkorlik qilgan?",
+    "a": ["Shifokor bilan", "Murabbiy bilan", "Psixolog bilan", "Tadqiqotchi bilan"],
+    "correct": 2
+  },
+  {
+    "q": "Talabalarning basketbol jamoasi ustida olib borilgan tadqiqotda uchinchi guruh qanday usuldan foydalangan?",
+    "a": ["Har kuni muntazam mashg‘ulot qilgan", "Umuman mashg‘ulot qilmagan", "Tasavvurda mashq bajargan", "Faqat nazariy bilimlarni o‘rgangan"],
+    "correct": 2
+  },
+  {
+    "q": "Qishloqdan shaharga ko‘chib kelib, o‘zlari tasavvur qilgan uyni topganlar bolajon katta oila kimlar edi?",
+    "a": ["Kris Polayn va Brayan Edvard", "Bill va Jenet Xendersonlar", "Arnold Shvarsenegger va Emerson", "Karl Praybram va Jan"],
+    "correct": 1
+  },
+  {
+    "q": "Muvaffaqiyat nimani chaqiradi?",
+    "a": ["omadni chaqiradi", "muvaffaqiyatni chaqiradi", "boylikni chaqiradi", "g‘alabani chaqiradi"],
+    "correct": 1
+  },
+  {
+    "q": "Tashqi muhitni o‘zgartirishdan avval …….. lozim?",
+    "a": ["yangi ish toppish", "ichki sharoitni yangilash", "atrofdagilarni o‘zgartirish", "moliyaviy imkoniyatni oshirish"],
+    "correct": 1
+  },
+  {
+    "q": "Kitobni o‘qish bilan birga …….. kerak?",
+    "a": ["uni boshqalarga o‘qitishmiz", "uni yod olishmiz", "uni hayotingizning bir qismiga aylantirishmiz", "uni qayta yozib chiqishmiz"],
+    "correct": 2
+  },
+  {
+    "q": "Muallifning fikricha, nimalar yonma-yon yuradi?",
+    "a": ["Qo‘rquv va tashvish", "Boylik va omad", "Farosat va intuitsiya", "Mehnat va tasodif"],
+    "correct": 2
+  },
+  {
+    "q": "Bir necha gamburger shoxobchasi sotib olish kimni multimillionerga aylantirgan edi?",
+    "a": ["Edisonni", "Genri Fordni", "Rey Krosni", "Eynshteynni"],
+    "correct": 2
+  },
+  {
+    "q": "Olimlarning aniqlashicha, miyamiz qabul qilayotgan ma’lumotlarning necha foizigina boshimizga yetib boradi?",
+    "a": ["10-20 %", "5-6 %", "1-1,5 %", "25-30 %"],
+    "correct": 2
+  },
+  {
+    "q": "Ishonch va qat’iyat bu shunchaki hissiyot bo‘libgina qolmay?",
+    "a": ["Oddiy hissiyot", "Tasodifiy holat", "Energiya harakatidir", "Ruhiy zaiflik belgisi"],
+    "correct": 2
+  },
+  {
+    "q": "“Ong(shururingiz)da dunyoni alg‘ov-dalg‘ov qila oladigan kuch bor” degan fikr muallifi kim?",
+    "a": ["Shekspir", "Emerson", "Uilyam Jeyms", "Eynshteyn"],
+    "correct": 2
+  },
+  {
+    "q": "Shifokor Frederik Banting insulinning kimyoviy tarkibini …….. kashf etgan.",
+    "a": ["tajriba vaqtida", "laboratoriyada", "tushida", "safar davomida"],
+    "correct": 2
+  },
+  {
+    "q": "Tikuv mashinasini ixtiro qilgan Elias Xou tushidan uyg‘onib qanday detalni yasashga tushdi?",
+    "a": ["Mashinaning motori qismini", "Ignani", "Yangi mato aylanuv qismini", "Elektr dvigatelini"],
+    "correct": 1
+  },
+  {
+    "q": "Nobel mukofoti laureati Jeyms Vatson DNK molekulalarining spiralsimon ekanligini qayerda ko‘rgan edi?",
+    "a": ["Laboratoriya tajribasida", "Ilmiy konferensiyada", "Tushida", "Mikroskop orqali kuzatishda"],
+    "correct": 2
+  },
+  {
+    "q": "Rivoyatda xo‘jayinning uyida dehqon piyoladagi ilon deb o‘ylagan narsasi aslida nimani ko‘rgan edi?",
+    "a": ["Haqiqiy ilonni", "Dorining rangini", "Kamonning aksini", "Suvdagi hasharotni"],
+    "correct": 2
+  },
+  {
+    "q": "6×6 yoki 7×8 javoblarini darhol ayta olishning sababi nima?",
+    "a": ["Maxsus qobiliyat tufayli", "Mustahkamlash texnikasi sababli", "Tug‘ma matematik iste’dod sababli", "Ularni yozib yodlagani uchun"],
+    "correct": 1
+  },
+  {
+    "q": "O‘z-o‘ziga yaxshi munosabatda bo‘ladigan bolalar ota-onasidan qanday munosabat ko‘rganda shakllanadi?",
+    "a": ["Qattiqqo‘llik va jazoni", "Muhabbat va rag‘batni", "Beparvolikni", "Doimiy nazoratni"],
+    "correct": 1
+  },
+  {
+    "q": "Har tong inson nima bilan uyg‘onadi?",
+    "a": ["Mislsiz imkoniyatlar bilan", "Cheklangan imkoniyatlar bilan", "Oddiy kun tartibi bilan", "Yangi muammolar bilan"],
     "correct": 0
   },
   {
-    "q": "5+5=?",
-    "a": ["10", "12", "14", "16"],
-    "correct": 0
+    "q": "Nobel mukofoti sohibi Linus Pauling: “Yaxshi fikr yaratishning eng oson yo‘li — ...” jumlasini davom ettiring.",
+    "a": ["ko‘p kitob o‘qishdir", "ko‘p tajriba o‘tkazishdir", "ko‘p fikr o‘ylab topishdir", "yolg‘iz ishlashdir"],
+    "correct": 2
   },
   {
-    "q": "20-10=?",
-    "a": ["10", "15", "20", "25"],
-    "correct": 0
+    "q": "Skotti Boumen murabbiylik qilgan jamoalarning yutuqlari 1997 yili 1000 dan oshgan edi. U qanday jamoa treneri bo‘lgan?",
+    "a": ["Basketbol jamoasi", "Futbol jamoasi", "Xokkey jamoasi", "Voleybol jamoasi"],
+    "correct": 2
   }
 ]
