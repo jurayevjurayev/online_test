@@ -1422,13 +1422,13 @@ def certificate_pdf():
 
     # Positions (qo'lda sozlash uchun)
     name_y = 620  # Nom uchun y pozitsiyasi
-    name_x_offset = 0  # Nom uchun x offset (markazdan)
+    name_x_offset = -300  # Nom uchun x offset (markazdan)
     name_y_offset = 0  # Nom uchun qo'shimcha vertikal siljitish
-    result_y = 780  # Natija uchun y pozitsiyasi
-    result_x_offset = 0  # Natija uchun x offset (markazdan)
+    result_y = 850  # Natija uchun y pozitsiyasi
+    result_x_offset = -600  # Natija uchun x offset (markazdan)
     result_y_offset = 0  # Natija uchun qo'shimcha vertikal siljitish
-    test_x_offset = 0  # Test label uchun x offset (markazdan)
-    test_y_offset = 340  # Test label uchun y offset (result_y ga nisbatan)
+    test_x_offset = -680  # Test label uchun x offset (markazdan)
+    test_y_offset = 470  # Test label uchun y offset (result_y ga nisbatan)
     qr_x_offset = 400  # QR kodning o'ngdan masofasi
     qr_y_offset = 330  # QR kodning pastdan masofasi
     font_size_name = 50  # Nom uchun shrift o'lchami
