@@ -24,6 +24,8 @@ app.secret_key = "secret123"
 with open("savollar.json", "r", encoding="utf-8") as f:
     QUESTIONS = json.load(f)
 
+DEFAULT_LAST_TEST = "Test topshirilmadi"
+
 TESTS = {}
 for name, filename in [("test1", "savollar_test1.json"), ("test2", "savollar_test2.json")]:
     if os.path.exists(filename):
@@ -420,7 +422,7 @@ def profile():
 
     score = data[0] if data else 0
     total = data[1] if data else 0
-    last_test = data[2] if data and data[2] else "—"
+    last_test = data[2] if data and data[2] else DEFAULT_LAST_TEST
 
     percent = int((score / total) * 100) if total > 0 else 0
 
@@ -641,8 +643,8 @@ body{
 
 <div class="card">
     <p>Qaysi test bo‘yicha reytingni ko‘rmoqchisiz?</p>
-    <a href="/ranking/test1" class="btn">Test 1 Reyting</a>
-    <a href="/ranking/test2" class="btn">Test 2 Reyting</a>
+    <a href="/ranking/test1" class="btn">Fozil odamlar shahri reytingi</a>
+    <a href="/ranking/test2" class="btn">G'ayri ixtiyoriy ong mo'jizalari reytingi</a>
     <div style="margin-top:20px;">
         <a href="/profile" class="btn">🏠 Profilga qaytish</a>
     </div>
@@ -659,7 +661,7 @@ def ranking_test(test_name):
     if test_name not in TESTS:
         return redirect('/ranking')
 
-    test_label = "Test 1" if test_name == "test1" else "Test 2"
+    test_label = "Fozil odamlar shahri" if test_name == "test1" else "G'ayri ixtiyoriy ong mo'jizalari"
     score_col = f"{test_name}_score"
     total_col = f"{test_name}_total"
     time_col = f"{test_name}_time"
@@ -936,8 +938,8 @@ ul{
 <h1>DIQQAT❗️</h1>
 
 <div style="display:flex;justify-content:center;gap:15px;flex-wrap:wrap;margin-bottom:20px;">
-    <a href="/test-start/test1" class="btn">Test 1</a>
-    <a href="/test-start/test2" class="btn">Test 2</a>
+    <a href="/test-start/test1" class="btn">Fozil odamlar shahri</a>
+    <a href="/test-start/test2" class="btn">G'ayri ixtiyoriy ong mo'jizalari</a>
 </div>
 
 <ul>
@@ -982,7 +984,8 @@ def test():
 
     test_name = session['test_name']
     questions = TESTS.get(test_name, QUESTIONS)
-    test_label = "Test 1" if test_name == "test1" else "Test 2"
+    display_test_name = "Fozil odamlar shahri" if test_name == "test1" else "G'ayri ixtiyoriy ong mo'jizalari"
+    test_label = f"{display_test_name} testini"
     taken_col = f"{test_name}_taken"
 
     conn = sqlite3.connect("users.db")
@@ -1095,7 +1098,7 @@ Profilga qaytish
          UPDATE users
          SET {test_name}_score=?, {test_name}_total=?, {test_name}_taken=1, {test_name}_time=?, score=?, total=?, has_taken_test=1, spent_time=?, last_test=?
          WHERE username=?
-        """, (final_score, total, spent_time, final_score, total, spent_time, test_label, session['user']))
+        """, (final_score, total, spent_time, final_score, total, spent_time, display_test_name, session['user']))
 
         conn.commit()
         conn.close()
@@ -1350,18 +1353,65 @@ def verify(username):
     conn.close()
 
     if not data:
-        return "❌ Sertifikat topilmadi"
+        return render_template_string("""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Sertifikat tekshiruvi</title>
+            <style>
+                body{margin:0;font-family:Arial, sans-serif;background:#f4f4f4;color:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+                .card{background:#fff;padding:30px;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,0.12);max-width:480px;width:100%;text-align:center;}
+                h1{color:#1f3d72;margin-bottom:10px;}
+                p{font-size:16px;line-height:1.6;margin:12px 0;}
+                .note{margin-top:20px;color:#555;font-size:14px;}
+                .badge{display:inline-block;padding:10px 18px;border-radius:999px;background:#ffe8e8;color:#b02a37;font-weight:700;margin-top:16px;}
+            </style>
+        </head>
+        <body>
+        <div class="card">
+            <h1>❌ Sertifikat topilmadi</h1>
+            <p>Ushbu foydalanuvchi uchun sertifikat ma'lumotlari mavjud emas.</p>
+            <div class="note">QR kodni to‘g‘ri skanerlash va URLni tekshirishni qayta urinib ko‘ring.</div>
+        </div>
+        </body>
+        </html>
+        """)
 
     score, total, last_test = data
     percent = int((score / total) * 100) if total > 0 else 0
-    last_test = last_test or "Test"
+    last_test = last_test or DEFAULT_LAST_TEST
 
-    return f"""
-    <h2>✔ Sertifikat tasdiqlandi</h2>
-    <p>Foydalanuvchi: {username}</p>
-    <p>Test turi: {last_test}</p>
-    <p>Natija: {percent}%</p>
-    """
+    return render_template_string("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sertifikat tasdiqi</title>
+        <style>
+            body{margin:0;font-family:Arial, sans-serif;background:#eef2f7;color:#1e2a38;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+            .card{background:#fff;padding:32px;border-radius:20px;box-shadow:0 28px 80px rgba(0,0,0,0.12);max-width:520px;width:100%;}
+            h1{margin:0 0 12px;font-size:30px;color:#1b3a7a;}
+            p{margin:10px 0;font-size:17px;line-height:1.7;}
+            .value{font-weight:700;color:#243b55;}
+            .row{margin-bottom:16px;}
+            .label{color:#55606b;font-size:15px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;display:block;}
+            .footer{margin-top:24px;font-size:14px;color:#657786;}
+        </style>
+    </head>
+    <body>
+    <div class="card">
+        <h1>✔ Sertifikat tasdiqlandi</h1>
+        <div class="row"><span class="label">Foydalanuvchi</span><span class="value">{username}</span></div>
+        <div class="row"><span class="label">Test</span><span class="value">{last_test}</span></div>
+        <div class="row"><span class="label">Natija</span><span class="value">{score} / {total} ({percent}%)</span></div>
+        <div class="footer">QR kod orqali ushbu ma'lumotlar alohida oynada ochildi.</div>
+    </div>
+    </body>
+    </html>
+    """, username=username, last_test=last_test, score=score, total=total, percent=percent)
 
 
 @app.route('/certificate-pdf')
@@ -1373,8 +1423,12 @@ def certificate_pdf():
     # Positions (qo'lda sozlash uchun)
     name_y = 640  # Nom uchun y pozitsiyasi
     name_x_offset = -300  # Nom uchun x offset (markazdan)
+    name_y_offset = 0  # Nom uchun qo'shimcha vertikal siljitish
     result_y = 850  # Natija uchun y pozitsiyasi
     result_x_offset = -600  # Natija uchun x offset (markazdan)
+    result_y_offset = 0  # Natija uchun qo'shimcha vertikal siljitish
+    test_x_offset = -700  # Test label uchun x offset (markazdan)
+    test_y_offset = 460  # Test label uchun y offset (result_y ga nisbatan)
     qr_x_offset = 400  # QR kodning o'ngdan masofasi
     qr_y_offset = 330  # QR kodning pastdan masofasi
     font_size_name = 50  # Nom uchun shrift o'lchami
@@ -1393,7 +1447,7 @@ def certificate_pdf():
 
     score, total, last_test = data
     if not last_test:
-        last_test = "Test"
+        last_test = DEFAULT_LAST_TEST
 
     if not total:
         total = 1
@@ -1401,7 +1455,8 @@ def certificate_pdf():
     percent = int((score / total) * 100)
     name = session['user']
     result = f"{score} / {total} ({percent}%)"
-    verify_url = f"https://online-test-hxts.onrender.com/verify/{name}"
+    host_url = request.host_url.rstrip('/')
+    verify_url = f"{host_url}/verify/{name}?t={int(time.time())}"
 
     width, height = landscape(A4)
 
@@ -1464,7 +1519,7 @@ def certificate_pdf():
         if os.path.exists(font_path):
             font_name = ImageFont.truetype(font_path, font_size_name)
             font_result = ImageFont.truetype(font_path, font_size_result)
-            font_test = ImageFont.truetype(font_path, 22)
+            font_test = ImageFont.truetype(font_path, 28)
         else:
             font_name = ImageFont.load_default()
             font_result = ImageFont.load_default()
@@ -1481,14 +1536,16 @@ def certificate_pdf():
         bbox = draw.textbbox((0, 0), result, font=font_result)
         text_width = bbox[2] - bbox[0]
         x_result = (img.width - text_width) // 2 + result_x_offset
-        draw.text((x_result, result_y), result, fill=(0, 0, 0), font=font_result)
+        y_result_final = result_y + result_y_offset
+        draw.text((x_result, y_result_final), result, fill=(0, 0, 0), font=font_result)
 
         # Test label
-        test_text = f"Test turi: {last_test}"
+        test_text = f"Test topshirilgan kitob: {last_test}"
         bbox = draw.textbbox((0, 0), test_text, font=font_test)
         text_width = bbox[2] - bbox[0]
-        x_test = (img.width - text_width) // 2 + result_x_offset
-        draw.text((x_test, result_y + 50), test_text, fill=(0, 0, 0), font=font_test)
+        x_test = (img.width - text_width) // 2 + test_x_offset
+        y_test = y_result_final + test_y_offset
+        draw.text((x_test, y_test), test_text, fill=(0, 0, 0), font=font_test)
 
         # QR
         qr = qrcode.make(verify_url)
