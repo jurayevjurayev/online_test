@@ -20,6 +20,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 app = Flask(__name__)
 app.secret_key = "secret123"
+DB_PATH = os.path.join(app.root_path, "users.db")
 
 with open("savollar.json", "r", encoding="utf-8") as f:
     QUESTIONS = json.load(f)
@@ -36,7 +37,7 @@ for name, filename in [("test1", "savollar_test1.json"), ("test2", "savollar_tes
 
 # DATABASE
 def init_db():
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     c.execute("""
@@ -199,7 +200,7 @@ def register():
         username = request.form['username']
         password = request.form['password']
 
-        conn = sqlite3.connect("users.db")
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
 
         try:
@@ -304,7 +305,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        conn = sqlite3.connect("users.db")
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
 
         c.execute(
@@ -414,7 +415,7 @@ def profile():
     if 'user' not in session:
         return redirect('/login')
 
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     c.execute("SELECT score, total, last_test FROM users WHERE username=?", (session['user'],))
@@ -666,7 +667,7 @@ def ranking_test(test_name):
     total_col = f"{test_name}_total"
     time_col = f"{test_name}_time"
 
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     c.execute(f"SELECT username, {score_col}, {total_col}, {time_col} FROM users WHERE {total_col} > 0 ORDER BY {score_col} DESC, {time_col} ASC")
@@ -943,7 +944,7 @@ ul{
 </div>
 
 <ul>
-    <li>Har bir savol uchun 30 sekunt vaqt ajratilgan bo'lib jami 30 ta savol mavjud</li>
+    <li>Har bir savol uchun 30 sekunt vaqt ajratilgan bo'lib jami 25 ta savol mavjud</li>
     <li>Test oxirida natija foizda chiqadi</li>
     <li>Testni faqat 1 marta ishlash imkoniyati mavjud</li>
     <li>Savollarga javob berilgandan so'ng navbatdagi savolga o'tiladi</li>
@@ -988,7 +989,7 @@ def test():
     test_label = f"{display_test_name} testini"
     taken_col = f"{test_name}_taken"
 
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     c.execute(
@@ -1091,7 +1092,7 @@ Profilga qaytish
         percent = int((final_score / total) * 100) if total > 0 else 0
         spent_time = int(time.time() - session['start_time'])
 
-        conn = sqlite3.connect("users.db")
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
 
         c.execute(f"""
@@ -1345,7 +1346,7 @@ let countdown = setInterval(function(){
 @app.route('/verify/<username>')
 def verify(username):
 
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     c.execute("SELECT score, total, last_test FROM users WHERE username=?", (username,))
@@ -1425,17 +1426,17 @@ def certificate_pdf():
     name_x_offset = -300  # Nom uchun x offset (markazdan)
     name_y_offset = 0  # Nom uchun qo'shimcha vertikal siljitish
     result_y = 850  # Natija uchun y pozitsiyasi
-    result_x_offset = -600  # Natija uchun x offset (markazdan)
+    result_x_offset = -610  # Natija uchun x offset (markazdan)
     result_y_offset = 0  # Natija uchun qo'shimcha vertikal siljitish
     test_x_offset = -680  # Test label uchun x offset (markazdan)
     test_y_offset = 470  # Test label uchun y offset (result_y ga nisbatan)
     qr_x_offset = 400  # QR kodning o'ngdan masofasi
     qr_y_offset = 330  # QR kodning pastdan masofasi
     font_size_name = 50  # Nom uchun shrift o'lchami
-    font_size_result = 25  # Natija uchun shrift o'lchami
+    font_size_result = 24  # Natija uchun shrift o'lchami
     qr_size = 170  # QR kod o'lchami
 
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     c.execute("SELECT score, total, last_test FROM users WHERE username=?", (session['user'],))
