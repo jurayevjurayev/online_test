@@ -1404,9 +1404,9 @@ def verify(username):
     <body>
     <div class="card">
         <h1>✔ Sertifikat tasdiqlandi</h1>
-        <div class="row"><span class="label">Foydalanuvchi</span><span class="value">{username}</span></div>
-        <div class="row"><span class="label">Test</span><span class="value">{last_test}</span></div>
-        <div class="row"><span class="label">Natija</span><span class="value">{score} / {total} ({percent}%)</span></div>
+        <div class="row"><span class="label">Foydalanuvchi</span><span class="value">{{ username }}</span></div>
+        <div class="row"><span class="label">Test</span><span class="value">{{ last_test }}</span></div>
+        <div class="row"><span class="label">Natija</span><span class="value">{{ score }} / {{ total }} ({{ percent }}%)</span></div>
         <div class="footer">QR kod orqali ushbu ma'lumotlar alohida oynada ochildi.</div>
     </div>
     </body>
@@ -1431,8 +1431,8 @@ def certificate_pdf():
     test_y_offset = 460  # Test label uchun y offset (result_y ga nisbatan)
     qr_x_offset = 400  # QR kodning o'ngdan masofasi
     qr_y_offset = 330  # QR kodning pastdan masofasi
-    font_size_name = 50  # Nom uchun shrift o'lchami
-    font_size_result = 20  # Natija uchun shrift o'lchami
+    font_size_name = 80  # Nom uchun shrift o'lchami
+    font_size_result = 30  # Natija uchun shrift o'lchami
     qr_size = 170  # QR kod o'lchami
 
     conn = sqlite3.connect("users.db")
@@ -1519,7 +1519,7 @@ def certificate_pdf():
         if os.path.exists(font_path):
             font_name = ImageFont.truetype(font_path, font_size_name)
             font_result = ImageFont.truetype(font_path, font_size_result)
-            font_test = ImageFont.truetype(font_path, 28)
+            font_test = ImageFont.truetype(font_path, 40)
         else:
             font_name = ImageFont.load_default()
             font_result = ImageFont.load_default()
