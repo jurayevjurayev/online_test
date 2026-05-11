@@ -1515,8 +1515,17 @@ def certificate_pdf():
         draw = ImageDraw.Draw(img)
 
         # Font yuklash
-        font_path = r"C:\Windows\Fonts\arial.ttf"
-        if os.path.exists(font_path):
+        font_paths = [
+            r"C:\Windows\Fonts\arial.ttf",  # Windows
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",  # Linux
+            "/System/Library/Fonts/Arial.ttf",  # macOS
+        ]
+        font_path = None
+        for path in font_paths:
+            if os.path.exists(path):
+                font_path = path
+                break
+        if font_path:
             font_name = ImageFont.truetype(font_path, font_size_name)
             font_result = ImageFont.truetype(font_path, font_size_result)
             font_test = ImageFont.truetype(font_path, 40)
