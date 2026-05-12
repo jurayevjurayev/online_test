@@ -4,3 +4,5 @@ reportlab
 Pillow
 qrcode
 PyPDF2
+Flask-SQLAlchemy
+psycopg2-binary
