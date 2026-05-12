@@ -1,6 +1,5 @@
 from flask import Flask, render_template_string, request, redirect, session
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import IntegrityError
+import sqlite3
 from reportlab.pdfgen import canvas
 import io
 from flask import send_file
@@ -20,17 +19,8 @@ except ImportError:
 from PIL import Image, ImageDraw, ImageFont
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "secret123")
-
-DATABASE_URL = os.environ.get("DATABASE_URL")
-if DATABASE_URL:
-    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
-else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.root_path, 'users.db')}"
-
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-db = SQLAlchemy(app)
+app.secret_key = "secret123"
+DB_PATH = os.path.abspath(os.path.join(app.root_path, "users.db"))
 
 with open("savollar.json", "r", encoding="utf-8") as f:
     QUESTIONS = json.load(f)
@@ -45,28 +35,55 @@ for name, filename in [("test1", "savollar_test1.json"), ("test2", "savollar_tes
     else:
         TESTS[name] = QUESTIONS
 
-class User(db.Model):
-    __tablename__ = "users"
+# DATABASE
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    
+    # Enable WAL mode for better reliability
+    c.execute("PRAGMA journal_mode=WAL")
+    c.execute("PRAGMA synchronous=FULL")
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
-    score = db.Column(db.Integer, default=0)
-    total = db.Column(db.Integer, default=0)
-    has_taken_test = db.Column(db.Integer, default=0)
-    spent_time = db.Column(db.Integer, default=0)
-    test1_score = db.Column(db.Integer, default=0)
-    test1_total = db.Column(db.Integer, default=0)
-    test1_taken = db.Column(db.Integer, default=0)
-    test1_time = db.Column(db.Integer, default=0)
-    test2_score = db.Column(db.Integer, default=0)
-    test2_total = db.Column(db.Integer, default=0)
-    test2_taken = db.Column(db.Integer, default=0)
-    test2_time = db.Column(db.Integer, default=0)
-    last_test = db.Column(db.String, default="")
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        score INTEGER DEFAULT 0,
+        total INTEGER DEFAULT 0,
+        has_taken_test INTEGER DEFAULT 0,
+        spent_time INTEGER DEFAULT 0
+    )
+    """)
 
-with app.app_context():
-    db.create_all()
+    for column_sql in [
+        "ALTER TABLE users ADD COLUMN has_taken_test INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test1_score INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test1_total INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test1_taken INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test1_time INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test2_score INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test2_total INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test2_taken INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN test2_time INTEGER DEFAULT 0",
+        "ALTER TABLE users ADD COLUMN last_test TEXT DEFAULT ''"
+    ]:
+        try:
+            c.execute(column_sql)
+        except sqlite3.OperationalError:
+            pass
+
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# Helper function for database connections
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=FULL")
+    return conn
 
 # HOME
 @app.route('/')
@@ -194,13 +211,22 @@ def register():
         username = request.form['username']
         password = request.form['password']
 
-        new_user = User(username=username, password=password)
-        db.session.add(new_user)
+        conn = get_db()
+        c = conn.cursor()
+
         try:
-            db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
+            c.execute(
+                "INSERT INTO users(username,password) VALUES(?,?)",
+                (username, password)
+            )
+
+            conn.commit()
+
+        except:
+            conn.close()
             return "Bu foydalanuvchi mavjud!"
+
+        conn.close()
 
         return redirect('/login')
 
@@ -290,7 +316,16 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        user = User.query.filter_by(username=username, password=password).first()
+        conn = get_db()
+        c = conn.cursor()
+
+        c.execute(
+            "SELECT * FROM users WHERE username=? AND password=?",
+            (username, password)
+        )
+
+        user = c.fetchone()
+        conn.close()
 
         if user:
             session['user'] = username
@@ -391,13 +426,19 @@ def profile():
     if 'user' not in session:
         return redirect('/login')
 
-    user = User.query.filter_by(username=session['user']).first()
+    conn = get_db()
+    c = conn.cursor()
 
-    score = user.score if user else 0
-    total = user.total if user else 0
-    last_test = user.last_test if user and user.last_test else DEFAULT_LAST_TEST
+    c.execute("SELECT score, total, last_test FROM users WHERE username=?", (session['user'],))
+    data = c.fetchone()
+
+    score = data[0] if data else 0
+    total = data[1] if data else 0
+    last_test = data[2] if data and data[2] else DEFAULT_LAST_TEST
 
     percent = int((score / total) * 100) if total > 0 else 0
+
+    conn.close()
 
     return render_template_string("""
 
@@ -637,15 +678,12 @@ def ranking_test(test_name):
     total_col = f"{test_name}_total"
     time_col = f"{test_name}_time"
 
-    users = db.session.query(
-        User.username,
-        getattr(User, score_col),
-        getattr(User, total_col),
-        getattr(User, time_col)
-    ).filter(getattr(User, total_col) > 0).order_by(
-        getattr(User, score_col).desc(),
-        getattr(User, time_col).asc()
-    ).all()
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute(f"SELECT username, {score_col}, {total_col}, {time_col} FROM users WHERE {total_col} > 0 ORDER BY {score_col} DESC, {time_col} ASC")
+    users = c.fetchall()
+    conn.close()
 
     return render_template_string("""
 <!DOCTYPE html>
@@ -962,9 +1000,18 @@ def test():
     test_label = f"{display_test_name} testini"
     taken_col = f"{test_name}_taken"
 
-    user = User.query.filter_by(username=session['user']).first()
+    conn = get_db()
+    c = conn.cursor()
 
-    if user and getattr(user, taken_col) == 1:
+    c.execute(
+        f"SELECT {taken_col} FROM users WHERE username=?",
+        (session['user'],)
+    )
+
+    data = c.fetchone()
+    conn.close()
+
+    if data and data[0] == 1:
 
         return render_template_string("""
 <!DOCTYPE html>
@@ -1056,18 +1103,17 @@ Profilga qaytish
         percent = int((final_score / total) * 100) if total > 0 else 0
         spent_time = int(time.time() - session['start_time'])
 
-        user = User.query.filter_by(username=session['user']).first()
-        if user:
-            setattr(user, f"{test_name}_score", final_score)
-            setattr(user, f"{test_name}_total", total)
-            setattr(user, f"{test_name}_taken", 1)
-            setattr(user, f"{test_name}_time", spent_time)
-            user.score = final_score
-            user.total = total
-            user.has_taken_test = 1
-            user.spent_time = spent_time
-            user.last_test = display_test_name
-            db.session.commit()
+        conn = get_db()
+        c = conn.cursor()
+
+        c.execute(f"""
+         UPDATE users
+         SET {test_name}_score=?, {test_name}_total=?, {test_name}_taken=1, {test_name}_time=?, score=?, total=?, has_taken_test=1, spent_time=?, last_test=?
+         WHERE username=?
+        """, (final_score, total, spent_time, final_score, total, spent_time, display_test_name, session['user']))
+
+        conn.commit()
+        conn.close()
 
         session.pop('q_index', None)
         session.pop('score_temp', None)
@@ -1311,8 +1357,14 @@ let countdown = setInterval(function(){
 @app.route('/verify/<username>')
 def verify(username):
 
-    user = User.query.filter_by(username=username).first()
-    if not user:
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("SELECT score, total, last_test FROM users WHERE username=?", (username,))
+    data = c.fetchone()
+    conn.close()
+
+    if not data:
         return render_template_string("""
         <!DOCTYPE html>
         <html>
@@ -1339,7 +1391,7 @@ def verify(username):
         </html>
         """)
 
-    score, total, last_test = user.score, user.total, user.last_test
+    score, total, last_test = data
     percent = int((score / total) * 100) if total > 0 else 0
     last_test = last_test or DEFAULT_LAST_TEST
 
@@ -1395,11 +1447,17 @@ def certificate_pdf():
     font_size_result = 24  # Natija uchun shrift o'lchami
     qr_size = 170  # QR kod o'lchami
 
-    user = User.query.filter_by(username=session['user']).first()
-    if not user:
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("SELECT score, total, last_test FROM users WHERE username=?", (session['user'],))
+    data = c.fetchone()
+    conn.close()
+
+    if not data:
         return "Sertifikat topilmadi"
 
-    score, total, last_test = user.score, user.total, user.last_test
+    score, total, last_test = data
     if not last_test:
         last_test = DEFAULT_LAST_TEST
 
